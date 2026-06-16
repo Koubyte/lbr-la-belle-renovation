@@ -2,15 +2,19 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import type { MouseEvent } from "react";
 import {
   ArrowRight,
+  CalendarBlank,
   CaretLeft,
   CaretRight,
+  CheckCircle,
   EnvelopeSimple,
   HouseLine,
   Images,
+  MapPinLine,
   PhoneCall,
   SealCheck,
   ShieldCheck,
   Sparkle,
+  Timer,
   X,
 } from "@phosphor-icons/react";
 
@@ -22,6 +26,10 @@ type Project = {
   category: Category;
   location: string;
   summary: string;
+  year: string;
+  duration: string;
+  budget: string;
+  features: string[];
   cover: string;
   images: string[];
 };
@@ -33,13 +41,6 @@ const categories: Array<Category | "Tous"> = [
   "Solar Screen",
   "Tapisserie",
   "Parquet",
-];
-
-const bathroomImages = [
-  "/images/local/sdb-avant-baignoire.jpg",
-  "/images/local/sdb-avant-demolition.jpg",
-  "/images/local/sdb-apres-douche.jpg",
-  "/images/local/sdb-apres-meuble.jpg",
 ];
 
 const facebookBathroomImages = Array.from({ length: 9 }, (_, index) => {
@@ -54,8 +55,18 @@ const projects: Project[] = [
     category: "Salle de bain",
     location: "Grundviller et Moselle",
     summary: "Dépose, préparation, douche, faïence, meuble double vasque et finitions coordonnées.",
+    year: "2025",
+    duration: "3 semaines",
+    budget: "Sur devis",
+    features: ["Dépose et préparation", "Douche vitrée", "Faïence et finitions", "Meuble vasque coordonné"],
     cover: "/images/local/sdb-apres-douche.jpg",
-    images: [...bathroomImages, ...facebookBathroomImages.slice(0, 4)],
+    images: [
+      "/images/local/sdb-apres-douche.jpg",
+      "/images/local/sdb-apres-meuble.jpg",
+      "/images/local/sdb-avant-baignoire.jpg",
+      "/images/local/sdb-avant-demolition.jpg",
+      ...facebookBathroomImages.slice(0, 4),
+    ],
   },
   {
     id: "douche-accessible",
@@ -63,6 +74,10 @@ const projects: Project[] = [
     category: "Salle de bain",
     location: "Habitat adapté",
     summary: "Remplacement de baignoire, accès simplifié, équipements sécurisants et pose soignée.",
+    year: "2025",
+    duration: "2 semaines",
+    budget: "Sur devis",
+    features: ["Remplacement baignoire", "Accès simplifié", "Équipements sécurisants", "Pose propre"],
     cover: "/images/facebook/sdb-fb-02.jpg",
     images: [
       "/images/facebook/sdb-fb-02.jpg",
@@ -77,8 +92,18 @@ const projects: Project[] = [
     category: "Salle de bain",
     location: "Chantier LBR",
     summary: "Volumes clairs, parois noires, carrelage minéral et éclairage encastré.",
+    year: "2025",
+    duration: "2 à 3 semaines",
+    budget: "Sur devis",
+    features: ["Carrelage minéral", "Parois noires", "Éclairage encastré", "Finitions contemporaines"],
     cover: "/images/facebook/sdb-fb-06.jpg",
-    images: facebookBathroomImages.slice(4),
+    images: [
+      "/images/facebook/sdb-fb-06.jpg",
+      "/images/facebook/sdb-fb-05.jpg",
+      "/images/facebook/sdb-fb-07.jpg",
+      "/images/facebook/sdb-fb-08.jpg",
+      "/images/facebook/sdb-fb-09.jpg",
+    ],
   },
 ];
 
@@ -298,13 +323,27 @@ function RealisationsPage() {
     setActiveImage((current) => (current + direction + activeProject.images.length) % activeProject.images.length);
   };
 
+  const countFor = (category: Category | "Tous") =>
+    category === "Tous" ? projects.length : projects.filter((project) => project.category === category).length;
+
+  useEffect(() => {
+    if (!activeProject) return;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "ArrowLeft") moveImage(-1);
+      if (event.key === "ArrowRight") moveImage(1);
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [activeProject]);
+
   return (
     <main className="realisations-page">
       <section className="page-hero">
-        <p className="eyebrow">Galerie</p>
-        <h1>Réalisations</h1>
+        <p className="eyebrow">Portfolio</p>
+        <h1>Nos réalisations</h1>
         <p>
-          Chantiers classés par métier. Ouvrez une réalisation pour parcourir les photos du projet.
+          Découvrez les projets LBR: salle de bain, Cover Styl, Solar Screen, tapisserie et parquet.
+          Cliquez sur un chantier pour ouvrir la galerie complète.
         </p>
       </section>
 
@@ -316,7 +355,8 @@ function RealisationsPage() {
             type="button"
             onClick={() => setActiveCategory(category)}
           >
-            {category}
+            <span>{category === "Tous" ? "Tous les projets" : category}</span>
+            <small>{countFor(category)}</small>
           </button>
         ))}
       </section>
@@ -331,10 +371,30 @@ function RealisationsPage() {
               key={project.id}
               onClick={() => openProject(project)}
             >
-              <img src={project.cover} alt={project.title} />
-              <span>{project.category}</span>
-              <strong>{project.title}</strong>
-              <small>{project.location}</small>
+              <div className="project-image">
+                <img src={project.cover} alt={project.title} />
+                <div className="project-overlay">
+                  <span>{project.category}</span>
+                  <strong>
+                    Voir le projet <ArrowRight size={18} weight="bold" />
+                  </strong>
+                </div>
+              </div>
+              <div className="project-info">
+                <span className="project-tag">{project.category}</span>
+                <h3>{project.title}</h3>
+                <p>{project.summary}</p>
+                <div className="project-meta">
+                  <span>
+                    <MapPinLine size={16} weight="bold" />
+                    {project.location}
+                  </span>
+                  <span>
+                    <CalendarBlank size={16} weight="bold" />
+                    {project.year}
+                  </span>
+                </div>
+              </div>
             </button>
           ))}
         </section>
@@ -350,35 +410,87 @@ function RealisationsPage() {
         className="project-modal"
         ref={dialogRef}
         onClose={closeProject}
+        onCancel={(event) => {
+          event.preventDefault();
+          closeProject();
+        }}
+        onClick={(event) => {
+          if (event.target === event.currentTarget) closeProject();
+        }}
         aria-label={activeProject?.title ?? "Réalisation"}
       >
         {activeProject ? (
-          <>
-            <div className="modal-topbar">
-              <div>
-                <span>{activeProject.category}</span>
-                <h2>{activeProject.title}</h2>
-              </div>
-              <button type="button" aria-label="Fermer" onClick={closeProject}>
-                <X size={22} weight="bold" />
-              </button>
-            </div>
-            <div className="modal-image-wrap">
-              <button type="button" aria-label="Image précédente" onClick={() => moveImage(-1)}>
-                <CaretLeft size={24} weight="bold" />
-              </button>
+          <div className="modal-container" onClick={(event) => event.stopPropagation()}>
+            <button className="modal-close" type="button" aria-label="Fermer" onClick={closeProject}>
+              <X size={24} weight="bold" />
+            </button>
+            <div className="modal-gallery">
               <img src={activeProject.images[activeImage]} alt={`${activeProject.title} ${activeImage + 1}`} />
-              <button type="button" aria-label="Image suivante" onClick={() => moveImage(1)}>
-                <CaretRight size={24} weight="bold" />
+              <button className="modal-arrow prev" type="button" aria-label="Image précédente" onClick={() => moveImage(-1)}>
+                <CaretLeft size={28} weight="bold" />
               </button>
+              <button className="modal-arrow next" type="button" aria-label="Image suivante" onClick={() => moveImage(1)}>
+                <CaretRight size={28} weight="bold" />
+              </button>
+              <div className="modal-thumbnails" aria-label="Photos du projet">
+                {activeProject.images.map((image, index) => (
+                  <button
+                    className={activeImage === index ? "active" : ""}
+                    type="button"
+                    key={image}
+                    onClick={() => setActiveImage(index)}
+                    aria-label={`Voir la photo ${index + 1}`}
+                  >
+                    <img src={image} alt="" />
+                  </button>
+                ))}
+              </div>
             </div>
-            <div className="modal-meta">
-              <p>{activeProject.summary}</p>
-              <span>
-                {activeImage + 1} / {activeProject.images.length}
-              </span>
+            <div className="modal-info">
+              <span className="project-tag">{activeProject.category}</span>
+              <h2>{activeProject.title}</h2>
+              <p className="modal-description">{activeProject.summary}</p>
+              <div className="modal-details">
+                <div className="detail-item">
+                  <label>Lieu</label>
+                  <span>{activeProject.location}</span>
+                </div>
+                <div className="detail-item">
+                  <label>Date</label>
+                  <span>{activeProject.year}</span>
+                </div>
+                <div className="detail-item">
+                  <label>Durée</label>
+                  <span>{activeProject.duration}</span>
+                </div>
+                <div className="detail-item">
+                  <label>Budget</label>
+                  <span>{activeProject.budget}</span>
+                </div>
+              </div>
+              <div className="modal-features">
+                <h4>Points du chantier</h4>
+                <ul>
+                  {activeProject.features.map((feature) => (
+                    <li key={feature}>
+                      <CheckCircle size={18} weight="fill" />
+                      {feature}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              <div className="modal-bottom">
+                <span>
+                  <Timer size={18} weight="bold" />
+                  Photo {activeImage + 1} / {activeProject.images.length}
+                </span>
+                <a href={phoneHref}>
+                  <PhoneCall size={18} weight="bold" />
+                  Demander un devis similaire
+                </a>
+              </div>
             </div>
-          </>
+          </div>
         ) : null}
       </dialog>
     </main>
